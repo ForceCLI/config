@@ -2,7 +2,7 @@ package config_test
 
 import (
 	"fmt"
-	"github.com/ddollar/config"
+	"github.com/devangel/config"
 )
 
 func ExampleNewConfig() {

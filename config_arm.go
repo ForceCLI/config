@@ -1,5 +1,3 @@
-// +build linux darwin arm !windows
-
 package config
 
 import (
