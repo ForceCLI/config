@@ -3,6 +3,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/mitchellh/go-homedir"
 	"io/ioutil"
 	"os"
 	"path"
@@ -30,7 +31,11 @@ func NewConfig(base string) (config *Config) {
 
 // List keys for a given config
 func (c *Config) List(name string) (keys []string, err error) {
-	dir := path.Join(c.configDirectory(), name)
+	configDir, err := c.configDirectory()
+	if err != nil {
+		return
+	}
+	dir := path.Join(configDir, name)
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return
@@ -44,27 +49,44 @@ func (c *Config) List(name string) (keys []string, err error) {
 
 // Save a key/value pair for a config
 func (c *Config) Save(name, key, value string) (err error) {
-	filename := path.Join(c.configDirectory(), name, key)
+	dir, err := c.configDirectory()
+	if err != nil {
+		return
+	}
+	filename := path.Join(dir, name, key)
 	err = c.writeFile(filename, value)
 	return
 }
 
 // Load a value for a config key
 func (c *Config) Load(name, key string) (body string, err error) {
-	filename := path.Join(c.configDirectory(), name, key)
+	dir, err := c.configDirectory()
+	if err != nil {
+		return
+	}
+	filename := path.Join(dir, name, key)
 	body, err = c.readFile(filename)
 	return
 }
 
 // Delete a config key/value pair
 func (c *Config) Delete(name, key string) (err error) {
-	filename := path.Join(c.configDirectory(), name, key)
+	dir, err := c.configDirectory()
+	if err != nil {
+		return
+	}
+	filename := path.Join(dir, name, key)
 	err = os.Remove(filename)
 	return
 }
 
-func (c *Config) configDirectory() string {
-	return path.Join(c.homeDirectory(), fmt.Sprintf(".%s", c.Base))
+func (c *Config) configDirectory() (configDir string, err error) {
+	home, err := c.homeDirectory()
+	if err != nil {
+		return
+	}
+	configDir = path.Join(home, fmt.Sprintf(".%s", c.Base))
+	return
 }
 
 func (c *Config) writeFile(filename, body string) (err error) {
@@ -86,4 +108,8 @@ func (c *Config) readFile(filename string) (body string, err error) {
 	}
 	body = string(data)
 	return
+}
+
+func (c *Config) homeDirectory() (string, error) {
+	return homedir.Dir()
 }

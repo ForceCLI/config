@@ -2,7 +2,7 @@ package config_test
 
 import (
 	"fmt"
-	"github.com/devangel/config"
+	"github.com/ForceCLI/config"
 )
 
 func ExampleNewConfig() {
