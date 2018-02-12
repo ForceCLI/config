@@ -3,6 +3,9 @@ package config_test
 import (
 	"fmt"
 	"github.com/ForceCLI/config"
+	"io/ioutil"
+	"os"
+	"testing"
 )
 
 func ExampleNewConfig() {
@@ -44,4 +47,17 @@ func ExampleConfig_Delete() {
 	logins, _ := conf.List("logins")
 	fmt.Println(logins)
 	// Output: [user@example.org]
+}
+
+func TestLocalConfig(t *testing.T) {
+	tempDir, _ := ioutil.TempDir("", "config-test")
+	os.Chdir(tempDir)
+	conf := config.NewConfig("myapp")
+	conf.SaveGlobal("logins", "user@example.org", "00000")
+	conf.SaveLocal("logins", "user@example.org", "12345")
+	password, _ := conf.LoadLocalOrGlobal("logins", "user@example.org")
+	os.RemoveAll(tempDir)
+	if password != "12345" {
+		t.Fatalf("Failed to read local config value")
+	}
 }

@@ -49,7 +49,21 @@ func (c *Config) List(name string) (keys []string, err error) {
 
 // Save a key/value pair for a config
 func (c *Config) Save(name, key, value string) (err error) {
+	return c.SaveGlobal(name, key, value)
+}
+
+func (c *Config) SaveGlobal(name, key, value string) (err error) {
 	dir, err := c.configDirectory()
+	if err != nil {
+		return
+	}
+	filename := path.Join(dir, name, key)
+	err = c.writeFile(filename, value)
+	return
+}
+
+func (c *Config) SaveLocal(name, key, value string) (err error) {
+	dir, err := c.localConfigDirectory()
 	if err != nil {
 		return
 	}
@@ -60,12 +74,31 @@ func (c *Config) Save(name, key, value string) (err error) {
 
 // Load a value for a config key
 func (c *Config) Load(name, key string) (body string, err error) {
+	return c.LoadGlobal(name, key)
+}
+
+func (c *Config) LoadGlobal(name, key string) (body string, err error) {
 	dir, err := c.configDirectory()
 	if err != nil {
 		return
 	}
 	filename := path.Join(dir, name, key)
 	body, err = c.readFile(filename)
+	return
+}
+
+// Load value from local config directory if it exists; otherwise from global
+// config directory
+func (c *Config) LoadLocalOrGlobal(name, key string) (body string, err error) {
+	dir, err := c.localConfigDirectory()
+	if err != nil {
+		return
+	}
+	filename := path.Join(dir, name, key)
+	body, err = c.readFile(filename)
+	if err != nil {
+		return c.LoadGlobal(name, key)
+	}
 	return
 }
 
@@ -86,6 +119,15 @@ func (c *Config) configDirectory() (configDir string, err error) {
 		return
 	}
 	configDir = path.Join(home, fmt.Sprintf(".%s", c.Base))
+	return
+}
+
+func (c *Config) localConfigDirectory() (configDir string, err error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return
+	}
+	configDir = path.Join(cwd, fmt.Sprintf(".%s", c.Base))
 	return
 }
 
