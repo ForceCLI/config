@@ -104,12 +104,30 @@ func (c *Config) LoadLocalOrGlobal(name, key string) (body string, err error) {
 
 // Delete a config key/value pair
 func (c *Config) Delete(name, key string) (err error) {
+	return c.DeleteGlobal(name, key)
+}
+
+func (c *Config) DeleteGlobal(name, key string) (err error) {
 	dir, err := c.configDirectory()
 	if err != nil {
 		return
 	}
 	filename := path.Join(dir, name, key)
 	err = os.Remove(filename)
+	return
+}
+
+// Delete a config key/value pair
+func (c *Config) DeleteLocalOrGlobal(name, key string) (err error) {
+	dir, err := c.localConfigDirectory()
+	if err != nil {
+		return
+	}
+	filename := path.Join(dir, name, key)
+	err = os.Remove(filename)
+	if err != nil {
+		return c.DeleteGlobal(name, key)
+	}
 	return
 }
 
